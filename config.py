@@ -19,5 +19,5 @@ CAT_FEATURES = [
 ]
 NUM_FEATURES = [
     "Log_TotalIncome", "Log_LoanAmount",
-    "EMI_Ratio", "Loan_Amount_Term", "Credit_History"
+    "Loan_Income_Ratio", "Loan_Amount_Term", "Credit_History"
 ]
