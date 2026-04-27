@@ -56,6 +56,7 @@ Decision Tree excluded due to clear overfitting signal (lowest AUC at 0.638).
 ---
 
 ## Project Structure
+```
 loan-advisory-system/
 ├── data/
 │   ├── raw/              # original CSV (not tracked in git)
@@ -77,6 +78,7 @@ loan-advisory-system/
 └── requirements.txt
 
 ---
+```
 
 ## How to Run Locally
 
