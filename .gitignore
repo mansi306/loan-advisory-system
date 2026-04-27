@@ -1,7 +1,6 @@
 venv/
 loan_venv/
 models/*.joblib
-data/raw/
 data/processed/
 __pycache__/
 *.pyc
