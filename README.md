@@ -32,11 +32,33 @@ This project builds a full decision-support system, not just a prediction model.
 
 ## Key EDA Findings
 
-1. **Credit history is a gate, not a factor** — applicants with credit history are approved at 78% vs 8% without. A 70-point gap that dwarfs every other variable.
-2. **Income alone is a weak predictor** — a low-income applicant with credit history is approved more often than a high-income applicant without one.
-3. **Loan-to-income ratio has a threshold effect** — approval drops sharply above 2.0x annual income, motivating the `Loan_Income_Ratio` engineered feature.
-4. **Geography proxies income** — the rural approval gap shrinks significantly when controlling for income bracket.
-5. **Class imbalance (69/31)** — motivated use of StratifiedKFold and AUC as primary metric over accuracy.
+## Key EDA Findings
+
+These are not just observations — each finding directly shaped a modeling decision.
+
+**1. Credit history is a gatekeeper, not just a feature**
+Applicants with any credit history get approved 78% of the time.
+Without one? Just 8%. That's a 70-point gap — bigger than income, education, and employment combined.
+In simple terms: *it doesn't matter how much you earn if you've never borrowed before.*
+
+**2. High income doesn't save you without credit history**
+A person earning ₹25,000/month with no credit record gets rejected more often than someone earning ₹4,000/month who has one.
+Income matters — but only after the credit history gate is cleared.
+
+**3. There's a danger zone for loan size**
+When a loan amount crosses roughly 2x the applicant's annual income, approval chances drop sharply — from ~79% to ~38%.
+Below that threshold, most applications sail through. Above it, most don't.
+This is why we built the `Loan_Income_Ratio` feature instead of using raw loan amount.
+
+**4. "Rural" doesn't mean "risky" — it means "lower income"**
+Rural applicants are approved 15% less often than urban ones on the surface.
+But when you compare rural and urban applicants with the *same income*, that gap shrinks to just 2%.
+The system isn't penalising geography — it's penalising income. Those are very different things.
+
+**5. The dataset itself is imbalanced — and that changes everything**
+69% of applications in the data were approved, 31% rejected.
+A lazy model could hit 69% accuracy by approving everyone — and look good on paper.
+This is why we use AUC instead of accuracy, and StratifiedKFold to make sure every training fold reflects the real world split.
 
 ---
 
