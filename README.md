@@ -2,14 +2,13 @@
 
 AI-powered loan approval prediction with explainable decisions and personalized improvement guidance.
 
+## 🚀 Live Demo
+👉 **[Try the app here](https://loan-advisory-system-d7feqnptzudw3dmwvqnm7o.streamlit.app/)**
+
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.8-orange)
 ![SHAP](https://img.shields.io/badge/SHAP-0.51-green)
 ![Streamlit](https://img.shields.io/badge/Streamlit-deployed-red)
-
----
-## 🚀 Live Demo
-👉 **[Try the app here](https://loan-advisory-system-d7feqnptzudw3dmwvqnm7o.streamlit.app/)**
 
 ## The Problem
 
