@@ -8,6 +8,8 @@ AI-powered loan approval prediction with explainable decisions and personalized 
 ![Streamlit](https://img.shields.io/badge/Streamlit-deployed-red)
 
 ---
+## 🚀 Live Demo
+👉 **[Try the app here](https://loan-advisory-system-d7feqnptzudw3dmwvqnm7o.streamlit.app/)**
 
 ## The Problem
 
