@@ -1,7 +1,7 @@
 """
 predict.py
 Loads saved pipeline, runs inference, generates SHAP explanations.
-Called by the Streamlit app — never contains training logic.
+Uses lazy loading — model loads only when first prediction is made.
 """
 
 import pandas as pd
@@ -15,12 +15,22 @@ sys.path.append(str(Path(__file__).parent.parent))
 from config import MODEL_DIR, THRESHOLD
 from src.features import engineer_features
 
+# ── Lazy loading globals ────────────────────────────────
+_pipeline     = None
+_model        = None
+_preprocessor = None
+_explainer    = None
 
-# ── Load artifacts once at module import ───────────────
-pipeline    = joblib.load(MODEL_DIR / "best_pipeline.joblib")
-model       = pipeline.named_steps["clf"]
-preprocessor = pipeline.named_steps["pre"]
-explainer   = shap.TreeExplainer(model)
+
+def _load_artifacts():
+    """Load model artifacts on first prediction call."""
+    global _pipeline, _model, _preprocessor, _explainer
+    if _pipeline is not None:
+        return
+    _pipeline     = joblib.load(MODEL_DIR / "best_pipeline.joblib")
+    _model        = _pipeline.named_steps["clf"]
+    _preprocessor = _pipeline.named_steps["pre"]
+    _explainer    = shap.TreeExplainer(_model)
 
 
 def predict_with_explanation(applicant: dict) -> dict:
@@ -37,22 +47,21 @@ def predict_with_explanation(applicant: dict) -> dict:
           factors: [(feature_name, shap_value), ...] top 6 by magnitude
         }
     """
+    _load_artifacts()
+
     df = engineer_features(pd.DataFrame([applicant]))
-    X  = preprocessor.transform(df)
+    X  = _preprocessor.transform(df)
 
-    prob = float(model.predict_proba(X)[0][1])
+    prob = float(_model.predict_proba(X)[0][1])
 
-    # shap_values returns list [class_0, class_1] for tree classifiers
-    sv = explainer.shap_values(X)
+    sv = _explainer.shap_values(X)
     if isinstance(sv, list):
-        shap_vals = np.array(sv[1][0])
+        shap_vals = np.array(sv[1][0]).flatten()
     else:
-        shap_vals = np.array(sv[0])
-    shap_vals = shap_vals.flatten()
+        shap_vals = np.array(sv[0]).flatten()
 
-    feat_names = preprocessor.get_feature_names_out()
+    feat_names = _preprocessor.get_feature_names_out()
 
-    # Sort by absolute magnitude — biggest impact first
     factors = sorted(
         zip(feat_names, shap_vals),
         key=lambda x: abs(x[1]),
@@ -67,7 +76,9 @@ def predict_with_explanation(applicant: dict) -> dict:
 
 
 if __name__ == "__main__":
-    # Test with a sample rejected applicant
+    from app.train_on_startup import ensure_model_exists
+    ensure_model_exists()
+
     sample_rejected = {
         "Gender": "Male",
         "Married": "Yes",
@@ -78,7 +89,7 @@ if __name__ == "__main__":
         "CoapplicantIncome": 0,
         "LoanAmount": 120,
         "Loan_Amount_Term": 360,
-        "Credit_History": 0,       # no credit history — expect rejection
+        "Credit_History": 0,
         "Property_Area": "Urban"
     }
 
@@ -92,7 +103,7 @@ if __name__ == "__main__":
         "CoapplicantIncome": 3000,
         "LoanAmount": 100,
         "Loan_Amount_Term": 360,
-        "Credit_History": 1,       # has credit history — expect approval
+        "Credit_History": 1,
         "Property_Area": "Urban"
     }
 
@@ -102,8 +113,7 @@ if __name__ == "__main__":
     print(f"Decision:    {'APPROVED' if r1['approved'] else 'REJECTED'}")
     print("Top factors:")
     for name, val in r1["factors"]:
-        direction = "hurts" if val < 0 else "helps"
-        print(f"  {name:<35} {val:+.4f}  ({direction})")
+        print(f"  {name:<35} {val:+.4f}  ({'hurts' if val < 0 else 'helps'})")
 
     print("\n=== APPROVED APPLICANT ===")
     r2 = predict_with_explanation(sample_approved)
@@ -111,5 +121,4 @@ if __name__ == "__main__":
     print(f"Decision:    {'APPROVED' if r2['approved'] else 'REJECTED'}")
     print("Top factors:")
     for name, val in r2["factors"]:
-        direction = "hurts" if val < 0 else "helps"
-        print(f"  {name:<35} {val:+.4f}  ({direction})")
+        print(f"  {name:<35} {val:+.4f}  ({'hurts' if val < 0 else 'helps'})")
